@@ -1,23 +1,28 @@
 package com.spring.project.Services;
 
 import java.util.*;
+
+
 import com.spring.project.Model.User;
+import com.spring.project.Model.Response.UserResponse;
+import com.spring.project.Shared.Dto.UserDto.UserDto;
 
 public interface UserService {
-	List<User> getUsers();
 
-	void createUser(User user);
+	UserDto createUser(UserDto userDto);
 
-	User getUser(String email);
+	List<UserDto> getUsers();
 
-	Optional<User> getUser(Long id);
+	UserDto getUserByEmail(String email);
 
-	Optional<User> updateUser(Long id, User user);
+	UserDto getUserById(String userid);
+
+	UserDto deleteUser(String email);
+
+//	Optional<User> updateUser(Long id, User user);
+//	
+//	User updateUser(String email, User user);
 	
-	User updateUser(String email, User user);
-	
-	Optional<User> deleteUser(Long id);
-
-	User deleteUser(String email);
+//	Optional<User> deleteUser(Long id);
 
 }

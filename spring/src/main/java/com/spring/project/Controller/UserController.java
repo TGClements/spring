@@ -1,12 +1,18 @@
 package com.spring.project.Controller;
 
 import java.util.*;
+
+import org.springframework.beans.BeanUtils;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 import com.spring.project.Model.User;
+import com.spring.project.Model.Request.UserRequest;
+import com.spring.project.Model.Response.UserResponse;
 import com.spring.project.Services.UserService;
+import com.spring.project.Shared.Dto.UserDto.UserDto;
 
 @RestController
-@RequestMapping("users")
+@RequestMapping(path = "users")
 public class UserController {
 
 	private final UserService userService;
@@ -14,62 +20,93 @@ public class UserController {
 	public UserController(UserService userService) {
 		this.userService = userService;
 	}
-
-	@GetMapping
-	public List<User> getUsers() {
+	
+	@PostMapping(consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE},
+				produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE}
+	)	
+	public UserResponse createUser(@RequestBody UserRequest userRequest) {
 		
-		List<User> returnValue = userService.getUsers();
+		UserDto userDto = new UserDto();
+		BeanUtils.copyProperties(userRequest, userDto);
+		
+		UserDto createdUser = userService.createUser(userDto);
+		
+		UserResponse returnValue = new UserResponse();
+		BeanUtils.copyProperties(createdUser, returnValue);
+		
+		return returnValue;
+	}
+	
+	@GetMapping
+	public List<UserResponse> getUsers() {
+		
+		List<UserDto> dtoList = userService.getUsers();
+		
+		List<UserResponse> returnValue = new ArrayList<UserResponse>();
+		
+		// initialize empty response list to copy values into
+		for(int i=0; i<dtoList.size(); i++) {
+			returnValue.add(new UserResponse());
+		}
+		
+		for(int i=0; i<dtoList.size(); i++) {
+			BeanUtils.copyProperties(dtoList.get(i), returnValue.get(i));
+		}
 		
 		return returnValue;
 	}
 	
 	@GetMapping(path = "/email={email}")
-	public User getUser(@PathVariable String email) {
+	public UserResponse getUserByEmail(@PathVariable String email) {
 		
-		User returnValue = userService.getUser(email);
+		UserDto obtainedUser = userService.getUserByEmail(email);
 		
-		return returnValue;
-	}
-	
-	@GetMapping(path = "/id={id}")
-	public Optional<User> getUser(@PathVariable Long id) {
-		
-		Optional<User> returnValue = userService.getUser(id);
+		UserResponse returnValue = new UserResponse();
+		BeanUtils.copyProperties(obtainedUser, returnValue);
 		
 		return returnValue;
 	}
 	
-	@PostMapping
-	public void createUser(@RequestBody User user) {
+	@GetMapping(path = "/userid={userid}")
+	public UserResponse getUserById(@PathVariable String userid) {
 		
-		userService.createUser(user);
-	}
-	
-	@PutMapping(path = "email={email}")
-	public User updateUser(@PathVariable String email, @RequestBody User user) {
-
-		User returnValue = userService.updateUser(email, user);
-		return returnValue;
-	}
-	
-	@PutMapping(path = "id={id}")
-	public Optional<User> updateUser(@PathVariable Long id, @RequestBody User user) {
-
-		Optional<User> returnValue = userService.updateUser(id, user);
-		return returnValue;
-	}
-	
-	@DeleteMapping(path = "/id={id}")
-	public Optional<User> deleteUser(@PathVariable Long id) {
+		UserDto obtainedUser = userService.getUserById(userid);
 		
-		Optional<User> returnValue = userService.deleteUser(id);
+		UserResponse returnValue = new UserResponse();
+		BeanUtils.copyProperties(obtainedUser, returnValue);
+		
 		return returnValue;
 	}
+	
+//	@PutMapping(path = "email={email}")
+//	public User updateUser(@PathVariable String email, @RequestBody User user) {
+//
+//		User returnValue = userService.updateUser(email, user);
+//		return returnValue;
+//	}
+//	
+//	@PutMapping(path = "/userid={userid}")
+//	public Optional<User> updateUser(@PathVariable Long id, @RequestBody User user) {
+//
+//		Optional<User> returnValue = userService.updateUser(id, user);
+//		return returnValue;
+//	}
+	
+//	@DeleteMapping(path = "/userid={userid}")
+//	public Optional<User> deleteUser(@PathVariable Long id) {
+//		
+//		Optional<User> returnValue = userService.deleteUser(id);
+//		return returnValue;
+//	}
 	
 	@DeleteMapping(path = "/email={email}")
-	public User deleteUser(@PathVariable String email) {
+	public UserResponse deleteUser(@PathVariable String email) {
 		
-		User returnValue = userService.deleteUser(email);
+		UserDto deletedUser = userService.deleteUser(email);
+		
+		UserResponse returnValue = new UserResponse();
+		BeanUtils.copyProperties(deletedUser, returnValue);
+		
 		return returnValue;
 	}
 	

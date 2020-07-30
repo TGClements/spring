@@ -127,14 +127,89 @@ public class UserServiceImplementation implements UserService {
 	}
 
 	@Override
-	public UserDto deleteUser(String email) {
+	public UserDto updateUserById(String userid, UserDto requestedUpdate) {
 		
+		User updateUser = new User();
+		BeanUtils.copyProperties(requestedUpdate, updateUser);
+		
+		User oldUserData = userRepository.findByUserId(userid);
+		
+		UserDto returnValue = new UserDto();
+		
+		try {
+			
+			if(oldUserData == null) {
+				
+				throw new Exception(); // Placeholder for custom exceptions
+			}
+			else {
+				
+				updateUser.setId(oldUserData.getId());
+				updateUser.setUserId(oldUserData.getUserId());
+				updateUser.setEncryptedPassword("test1");
+				updateUser.setEmailVerificationStatus(oldUserData.isEmailVerificationStatus());
+				
+				User updatedUserDetails = userRepository.save(updateUser);
+				
+				
+				BeanUtils.copyProperties(updatedUserDetails, returnValue);
+				
+				return returnValue;
+			}
+			
+		} catch(Exception e) {
+			e.printStackTrace();
+		}
+		
+		return returnValue;
+	}
+	
+	@Override
+	public UserDto updateUserByEmail(String email, UserDto requestedUpdate) {
+		
+		User updateUser = new User();
+		BeanUtils.copyProperties(requestedUpdate, updateUser);
+		
+		User oldUserData = userRepository.findByEmail(email);
+		
+		UserDto returnValue = new UserDto();
+		
+		try {
+			
+			if(oldUserData == null) {
+				
+				throw new Exception(); // Placeholder for custom exceptions
+			}
+			else {
+				
+				updateUser.setId(oldUserData.getId());
+				updateUser.setUserId(oldUserData.getUserId());
+				updateUser.setEncryptedPassword("test1");
+				updateUser.setEmailVerificationStatus(oldUserData.isEmailVerificationStatus());
+				
+				User updatedUserDetails = userRepository.save(updateUser);
+				
+				
+				BeanUtils.copyProperties(updatedUserDetails, returnValue);
+				
+				return returnValue;
+			}
+			
+		} catch(Exception e) {
+			e.printStackTrace();
+		}
+		
+		return returnValue;
+	}
+	
+	@Override
+	public UserDto deleteUserById(String userid) {
+
 		UserDto foundDtoUser = new UserDto();
 		
 		try {
 			
-			User foundUser = userRepository.findByEmail(email);
-			
+			User foundUser = userRepository.findByUserId(userid);
 			
 			if(foundUser == null) {
 				throw new Exception(); // Placeholder for custom exceptions
@@ -152,43 +227,29 @@ public class UserServiceImplementation implements UserService {
 		return foundDtoUser;
 	}
 	
-//	@Override
-//	public Optional<User> updateUser(Long id, User user) {
-//		
-//		Optional<User> opOldUser = userRepository.findById(id);
-//		User updatedUser = opOldUser.get();
-//		
-//		updatedUser.setEmail(user.getEmail());
-//		updatedUser.setFirstName(user.getFirstName());
-//		updatedUser.setLastName(user.getLastName());
-//		
-//		userRepository.save(updatedUser);
-//
-//		return opOldUser;
-//	}
-//	
-//	@Override
-//	public User updateUser(String email, User user) {
-//
-//		User opOldUser = userRepository.findByEmail(email);
-//		User updatedUser = opOldUser;
-//		
-//		updatedUser.setEmail(user.getEmail());
-//		updatedUser.setFirstName(user.getFirstName());
-//		updatedUser.setLastName(user.getLastName());
-//		
-//		userRepository.save(updatedUser);
-//
-//		return opOldUser;
-//	}
+	@Override
+	public UserDto deleteUserByEmail(String email) {
+		
+		UserDto foundDtoUser = new UserDto();
+		
+		try {
+			
+			User foundUser = userRepository.findByEmail(email);
+			
+			if(foundUser == null) {
+				throw new Exception(); // Placeholder for custom exceptions
+			}
+			else {
+						
+				BeanUtils.copyProperties(foundUser, foundDtoUser);
+				userRepository.deleteById(foundUser.getId());
+			}
+			
+		} catch(Exception e) {
+			e.printStackTrace();
+		}
+		
+		return foundDtoUser;
+	}
 
-//	@Override
-//	public Optional<User> deleteUser(Long id) {
-//		
-//		Optional<User> returnValue = userRepository.findById(id);
-//		userRepository.deleteById(id);
-//		
-//		return returnValue;
-//	}
-	
 }

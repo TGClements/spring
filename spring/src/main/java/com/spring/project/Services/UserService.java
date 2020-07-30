@@ -17,12 +17,12 @@ public interface UserService {
 
 	UserDto getUserById(String userid);
 
-	UserDto deleteUser(String email);
-
-//	Optional<User> updateUser(Long id, User user);
-//	
-//	User updateUser(String email, User user);
+	UserDto deleteUserById(String userid);
 	
-//	Optional<User> deleteUser(Long id);
+	UserDto deleteUserByEmail(String email);
+
+	UserDto updateUserByEmail(String email, UserDto requestedUpdate);
+
+	UserDto updateUserById(String userid, UserDto requestedUpdate);
 
 }

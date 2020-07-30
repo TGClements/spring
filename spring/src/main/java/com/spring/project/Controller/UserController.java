@@ -78,31 +78,49 @@ public class UserController {
 		return returnValue;
 	}
 	
-//	@PutMapping(path = "email={email}")
-//	public User updateUser(@PathVariable String email, @RequestBody User user) {
-//
-//		User returnValue = userService.updateUser(email, user);
-//		return returnValue;
-//	}
-//	
-//	@PutMapping(path = "/userid={userid}")
-//	public Optional<User> updateUser(@PathVariable Long id, @RequestBody User user) {
-//
-//		Optional<User> returnValue = userService.updateUser(id, user);
-//		return returnValue;
-//	}
+	@PutMapping(path = "email={email}")
+	public UserResponse updateUserByEmail(@PathVariable String email, @RequestBody UserRequest userRequest) {
+
+		UserDto requestedUpdate = new UserDto();
+		BeanUtils.copyProperties(userRequest, requestedUpdate);
+		
+		UserDto updatedUser = userService.updateUserByEmail(email, requestedUpdate);
+		
+		UserResponse returnValue = new UserResponse();
+		BeanUtils.copyProperties(updatedUser, returnValue);
+		
+		return returnValue;
+	}
 	
-//	@DeleteMapping(path = "/userid={userid}")
-//	public Optional<User> deleteUser(@PathVariable Long id) {
-//		
-//		Optional<User> returnValue = userService.deleteUser(id);
-//		return returnValue;
-//	}
+	@PutMapping(path = "/userid={userid}")
+	public UserResponse updateUserById(@PathVariable String userid, @RequestBody UserRequest userRequest) {
+
+		UserDto requestedUpdate = new UserDto();
+		BeanUtils.copyProperties(userRequest, requestedUpdate);
+		
+		UserDto updatedUser = userService.updateUserById(userid, requestedUpdate);
+		
+		UserResponse returnValue = new UserResponse();
+		BeanUtils.copyProperties(updatedUser, returnValue);
+		
+		return returnValue;
+	}
+	
+	@DeleteMapping(path = "/userid={userid}")
+	public UserResponse deleteUserById(@PathVariable String userid) {
+		
+		UserDto deletedUser = userService.deleteUserById(userid);
+		
+		UserResponse returnValue = new UserResponse();
+		BeanUtils.copyProperties(deletedUser, returnValue);
+		
+		return returnValue;
+	}
 	
 	@DeleteMapping(path = "/email={email}")
-	public UserResponse deleteUser(@PathVariable String email) {
+	public UserResponse deleteUserByEmail(@PathVariable String email) {
 		
-		UserDto deletedUser = userService.deleteUser(email);
+		UserDto deletedUser = userService.deleteUserByEmail(email);
 		
 		UserResponse returnValue = new UserResponse();
 		BeanUtils.copyProperties(deletedUser, returnValue);

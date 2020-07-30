@@ -1,6 +1,8 @@
 package com.spring.project.Services.Implementations;
 
 import java.util.*;
+
+import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import com.spring.project.Model.User;
 import com.spring.project.Services.UserService;
@@ -24,6 +26,24 @@ public class UserServiceImplementation implements UserService {
 		
 		return returnValue;
 	}
+	
+//	@Override
+//	public UserDto createUser(UserDto userDto) {
+//		
+//		UserEntity newUser = new UserEntity();
+//		BeanUtils.copyProperties(userDTO, newUser);
+//		
+//		newUser.setEncryptedPassword("test");
+//		newUser.setEmailVerificationStatus(true);
+//		newUser.setUserId(utils.generateUserId(30));
+//		
+//		UserEntity storedUserDetails = userRepository.save(newUser);
+//		
+//		UserDto returnValue = new userDto();
+//		BeanUtils.copyProperties(storedUserDetails, returnValue);
+//		
+//		return returnValue;
+//	}
 
 	@Override
 	public void createUser(User user) {
@@ -34,7 +54,19 @@ public class UserServiceImplementation implements UserService {
 	@Override
 	public User getUser(String email) {
 
-		User returnValue = userRepository.findByEmail(email);
+		User returnValue = null;
+		
+		try {
+			
+			returnValue = userRepository.findByEmail(email);
+			
+			if(returnValue == null) {
+				throw new Exception();
+			}
+			
+		} catch(Exception e) {
+			e.printStackTrace();
+		}
 		
 		return returnValue;
 	}

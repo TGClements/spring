@@ -3,9 +3,13 @@ package com.spring.project.Services.Implementations;
 import java.util.*;
 
 import org.springframework.beans.BeanUtils;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+
+import com.spring.project.Exceptions.*;
 import com.spring.project.Model.User;
-import com.spring.project.Model.Response.UserResponse;
 import com.spring.project.Services.UserService;
 import com.spring.project.Shared.Dto.UserDto.UserDto;
 import com.spring.project.Shared.Utils.Utils;
@@ -25,6 +29,12 @@ public class UserServiceImplementation implements UserService {
 	@Override
 	public UserDto createUser(UserDto userDto) {
 		
+		if(userDto.getEmail() == null)
+			throw new UnableToCreateUserException("Email required, yet not provided.");
+		
+		if(userDto.getPassword() == null)
+			throw new UnableToCreateUserException("Password required, yet not provided.");
+		
 		User newUser = new User();
 		BeanUtils.copyProperties(userDto, newUser);
 		
@@ -34,34 +44,33 @@ public class UserServiceImplementation implements UserService {
 		
 		UserDto returnValue = new UserDto();
 		
-		try {
 			
-			if(userRepository.findByEmail(newUser.getEmail()) == null) {
-				
-				User storedUserDetails = userRepository.save(newUser);
-				
-				
-				BeanUtils.copyProperties(storedUserDetails, returnValue);
-				
-				return returnValue;
-			}
-			else {
-				
-				throw new Exception(); // Placeholder for custom exceptions
-			}
+		if(userRepository.findByEmail(newUser.getEmail()) == null) {
 			
-		} catch(Exception e) {
-			e.printStackTrace();
+			User storedUserDetails = userRepository.save(newUser);
+			
+			
+			BeanUtils.copyProperties(storedUserDetails, returnValue);
+			
+			return returnValue;
 		}
-		
-		return returnValue;
+		else {
+			
+			throw new UserAlreadyExistsException("Could not create user. User Already Exists."); // Placeholder for custom exceptions
+		}
+
 	}
 
 	@Override
-	public List<UserDto> getUsers() {
+	public List<UserDto> getUsers(int page, int limit) {
 
+		if(page > 0) page --;
+		
+		Pageable pageableRequest = PageRequest.of(page, limit);
+		Page<User> userPage = userRepository.findAll(pageableRequest);
+		
 		List<User> userList = new ArrayList<User>();
-		userList = (List<User>) userRepository.findAll();
+		userList = userPage.getContent(); // get content returns a list
 		
 		List<UserDto> dtoList = new ArrayList<UserDto>();
 		
@@ -80,52 +89,42 @@ public class UserServiceImplementation implements UserService {
 	public UserDto getUserByEmail(String email) {
 
 		UserDto foundDtoUser = new UserDto();
+
+		User foundUser = userRepository.findByEmail(email);
 		
-		try {
-			
-			User foundUser = userRepository.findByEmail(email);
-			
-			
-			if(foundUser == null) {
-				throw new Exception(); // Placeholder for custom exceptions
-			}
-			else {
-						
-				BeanUtils.copyProperties(foundUser, foundDtoUser);
-			}
-			
-		} catch(Exception e) {
-			e.printStackTrace();
+		
+		if(foundUser == null) {
+			throw new UserNotFoundException("User Not Found");
 		}
-		
-		return foundDtoUser;		
+		else {
+					
+			BeanUtils.copyProperties(foundUser, foundDtoUser);
+			return foundDtoUser;
+		}
+
 	}
 
 	@Override
 	public UserDto getUserById(String userid) {
 
 		UserDto foundDtoUser = new UserDto();
+
+			
+		User foundUser = userRepository.findByUserId(userid);
 		
-		try {
-			
-			User foundUser = userRepository.findByUserId(userid);
-			
-			
-			if(foundUser == null) {
-				throw new Exception(); // Placeholder for custom exceptions
-			}
-			else {
-						
-				BeanUtils.copyProperties(foundUser, foundDtoUser);
-			}
-			
-		} catch(Exception e) {
-			e.printStackTrace();
+		
+		if(foundUser == null) {
+			throw new UserNotFoundException("User Not Found");
 		}
-		
-		return foundDtoUser;
+		else {
+					
+			BeanUtils.copyProperties(foundUser, foundDtoUser);
+			return foundDtoUser;
+		}
+	
 	}
 
+	// add error handling if they try to update with an email that already exists. use http code 409
 	@Override
 	public UserDto updateUserById(String userid, UserDto requestedUpdate) {
 		
@@ -136,34 +135,33 @@ public class UserServiceImplementation implements UserService {
 		
 		UserDto returnValue = new UserDto();
 		
-		try {
+		// If requested email is already in use, error out and dont allow the update
+		if(userRepository.findByEmail(updateUser.getEmail()) != null)
+			throw new RequestedEmailAlreadyInUseException("Unable to perform update. Requested email is already in use.");
+
 			
-			if(oldUserData == null) {
-				
-				throw new Exception(); // Placeholder for custom exceptions
-			}
-			else {
-				
-				updateUser.setId(oldUserData.getId());
-				updateUser.setUserId(oldUserData.getUserId());
-				updateUser.setEncryptedPassword("test1");
-				updateUser.setEmailVerificationStatus(oldUserData.isEmailVerificationStatus());
-				
-				User updatedUserDetails = userRepository.save(updateUser);
-				
-				
-				BeanUtils.copyProperties(updatedUserDetails, returnValue);
-				
-				return returnValue;
-			}
+		if(oldUserData == null) {
 			
-		} catch(Exception e) {
-			e.printStackTrace();
+			throw new UserNotFoundException("User Not Found");
 		}
-		
-		return returnValue;
+		else {
+			
+			updateUser.setId(oldUserData.getId());
+			updateUser.setUserId(oldUserData.getUserId());
+			updateUser.setEncryptedPassword("test1");
+			updateUser.setEmailVerificationStatus(oldUserData.isEmailVerificationStatus());
+			
+			User updatedUserDetails = userRepository.save(updateUser);
+			
+			
+			BeanUtils.copyProperties(updatedUserDetails, returnValue);
+			
+			return returnValue;
+		}
+
 	}
 	
+	// add error handling if they try to update with an email that already exists. use http code 409
 	@Override
 	public UserDto updateUserByEmail(String email, UserDto requestedUpdate) {
 		
@@ -173,33 +171,30 @@ public class UserServiceImplementation implements UserService {
 		User oldUserData = userRepository.findByEmail(email);
 		
 		UserDto returnValue = new UserDto();
-		
-		try {
+
+		// If requested email is already in use, error out and dont allow the update
+		if(userRepository.findByEmail(updateUser.getEmail()) != null)
+			throw new RequestedEmailAlreadyInUseException("Unable to perform update. Requested email is already in use.");
 			
-			if(oldUserData == null) {
-				
-				throw new Exception(); // Placeholder for custom exceptions
-			}
-			else {
-				
-				updateUser.setId(oldUserData.getId());
-				updateUser.setUserId(oldUserData.getUserId());
-				updateUser.setEncryptedPassword("test1");
-				updateUser.setEmailVerificationStatus(oldUserData.isEmailVerificationStatus());
-				
-				User updatedUserDetails = userRepository.save(updateUser);
-				
-				
-				BeanUtils.copyProperties(updatedUserDetails, returnValue);
-				
-				return returnValue;
-			}
+		if(oldUserData == null) {
 			
-		} catch(Exception e) {
-			e.printStackTrace();
+			throw new UserNotFoundException("User Not Found");
 		}
-		
-		return returnValue;
+		else {
+			
+			updateUser.setId(oldUserData.getId());
+			updateUser.setUserId(oldUserData.getUserId());
+			updateUser.setEncryptedPassword("test1");
+			updateUser.setEmailVerificationStatus(oldUserData.isEmailVerificationStatus());
+			
+			User updatedUserDetails = userRepository.save(updateUser);
+			
+			
+			BeanUtils.copyProperties(updatedUserDetails, returnValue);
+			
+			return returnValue;
+		}
+
 	}
 	
 	@Override
@@ -207,49 +202,39 @@ public class UserServiceImplementation implements UserService {
 
 		UserDto foundDtoUser = new UserDto();
 		
-		try {
+		User foundUser = userRepository.findByUserId(userid);
+		
+		if(foundUser == null) {
+			throw new  UserNotFoundException("User Not Found");
+		}
+		else {
+					
+			BeanUtils.copyProperties(foundUser, foundDtoUser);
+			userRepository.deleteById(foundUser.getId());
 			
-			User foundUser = userRepository.findByUserId(userid);
-			
-			if(foundUser == null) {
-				throw new Exception(); // Placeholder for custom exceptions
-			}
-			else {
-						
-				BeanUtils.copyProperties(foundUser, foundDtoUser);
-				userRepository.deleteById(foundUser.getId());
-			}
-			
-		} catch(Exception e) {
-			e.printStackTrace();
+			return foundDtoUser;
 		}
 		
-		return foundDtoUser;
 	}
 	
 	@Override
 	public UserDto deleteUserByEmail(String email) {
 		
 		UserDto foundDtoUser = new UserDto();
+
+		User foundUser = userRepository.findByEmail(email);
 		
-		try {
-			
-			User foundUser = userRepository.findByEmail(email);
-			
-			if(foundUser == null) {
-				throw new Exception(); // Placeholder for custom exceptions
-			}
-			else {
-						
-				BeanUtils.copyProperties(foundUser, foundDtoUser);
-				userRepository.deleteById(foundUser.getId());
-			}
-			
-		} catch(Exception e) {
-			e.printStackTrace();
+		if(foundUser == null) {
+			throw new  UserNotFoundException("User Not Found");
 		}
-		
-		return foundDtoUser;
+		else {
+					
+			BeanUtils.copyProperties(foundUser, foundDtoUser);
+			userRepository.deleteById(foundUser.getId());
+			
+			return foundDtoUser;
+		}
+
 	}
 
 }

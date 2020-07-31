@@ -5,7 +5,6 @@ import java.util.*;
 import org.springframework.beans.BeanUtils;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
-import com.spring.project.Model.User;
 import com.spring.project.Model.Request.UserRequest;
 import com.spring.project.Model.Response.UserResponse;
 import com.spring.project.Services.UserService;
@@ -38,9 +37,10 @@ public class UserController {
 	}
 	
 	@GetMapping
-	public List<UserResponse> getUsers() {
+	public List<UserResponse> getUsers(@RequestParam(value = "page", defaultValue = "1") int page,
+									   @RequestParam(value = "limit", defaultValue = "3") int limit) {
 		
-		List<UserDto> dtoList = userService.getUsers();
+		List<UserDto> dtoList = userService.getUsers(page, limit);
 		
 		List<UserResponse> returnValue = new ArrayList<UserResponse>();
 		
